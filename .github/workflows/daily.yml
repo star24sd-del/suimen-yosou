@@ -1,0 +1,47 @@
+name: daily-update
+
+on:
+  schedule:
+    - cron: "30 21 * * *"   # 毎日 日本時間の朝6:30(協定世界時の21:30)
+  workflow_dispatch:
+    inputs:
+      backfill_from:
+        description: "過去分をまとめて作るときの開始日(例 2026-09-01)。空なら通常の更新"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 取得と予想
+        env:
+          BACKFILL_FROM: ${{ github.event.inputs.backfill_from }}
+        run: |
+          if [ -n "$BACKFILL_FROM" ]; then
+            python update.py --backfill "$BACKFILL_FROM"
+          else
+            python update.py
+          fi
+      - name: 更新を保存
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "daily update $(date -u +%F)"
+            git push
+          fi
