@@ -172,6 +172,7 @@ def main() -> None:
 
     today = datetime.now(JST).date()
     yesterday = today - timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
     start = date.fromisoformat(a.backfill) if a.backfill else yesterday
     days = [start + timedelta(days=i) for i in range((yesterday - start).days + 1)]
 
@@ -180,12 +181,13 @@ def main() -> None:
             try_fetch(d, "B", a.sleep)
             try_fetch(d, "K", a.sleep)
         try_fetch(today, "B", a.sleep)  # 今日の番組表(結果はまだ無い)
+        try_fetch(tomorrow, "B", a.sleep)  # 明日の番組表(前日の夕方に公開。まだ無ければ飛ばす)
 
     Path(DATA).mkdir(exist_ok=True)
     bd.cmd_build(SimpleNamespace(data=DATA, out=RESULTS))  # 取得済みの成績を results.csv にまとめる
     enrich = build_enricher(RESULTS) if Path(RESULTS).exists() and Path(RESULTS).stat().st_size > 0 else None
 
-    for d in days + [today]:
+    for d in days + [today, tomorrow]:
         write_day(d, enrich)
     write_index()
 

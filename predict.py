@@ -17,10 +17,10 @@ import random
 from datetime import date, datetime
 from pathlib import Path
 
-COURSE_W = 6.0   # コース適性(2連対率の差, 例: +0.15)の重み。バックテストで調整する
+COURSE_W = 0.84  # コース適性(2連対率の差, 例: +0.15)の重み。過去成績から尤度で学習した値
 WEATHER_W = 1.0  # 会場ごとの風・波の影響(対数比)の重み。バックテストで調整する
 DEFAULT_ST = 0.16  # 平均STが分からないときの仮の値
-LANE_BONUS = [1.3, 0.5, 0.25, 0.0, -0.25, -0.5]  # 枠ごとの有利さ(1号艇が最も有利)
+LANE_BONUS = [0.0, -0.98, -1.0, -1.25, -1.52, -1.93]  # 枠ごとの有利さ(1号艇が基準)。学習した値
 MARKS = ["◎", "○", "▲", "△"]
 OUT_DIR = Path("docs/data")
 
@@ -28,7 +28,7 @@ OUT_DIR = Path("docs/data")
 def score(b: dict) -> float:
     """選手・機力・枠から強さを数値化する。ここを育てるのが予想の本体。"""
     st = b.get("st") or DEFAULT_ST
-    base = b["win"] * 0.9 + b["motor"] * 0.04 - st * 9 + LANE_BONUS[b["lane"] - 1]
+    base = b["win"] * 0.47 + b["motor"] * 0.011 - st * 8.3 + LANE_BONUS[b["lane"] - 1]
     return base + COURSE_W * b.get("course_adv", 0.0) + WEATHER_W * b.get("weather_adj", 0.0)
 
 
