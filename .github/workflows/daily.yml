@@ -2,7 +2,8 @@ name: daily-update
 
 on:
   schedule:
-    - cron: "30 21 * * *"   # 毎日 日本時間の朝6:30(協定世界時の21:30)
+    - cron: "30 21 * * *"
+    - cron: "0 11 * * *"
   workflow_dispatch:
     inputs:
       backfill_from:
